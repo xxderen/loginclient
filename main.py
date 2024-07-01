@@ -186,7 +186,7 @@ def main():
                     x = int(x)
                 except ValueError:
                     x = sys.maxsize
-                if x >= int(y):
+                if x > int(y):
                     print("Wrong Input!")
                 elif x == admin_id:
                     print("You cant delete an Admin Account!")
