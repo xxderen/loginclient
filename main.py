@@ -30,6 +30,107 @@ logged_in_user_admin = False
 global logged_in_user
 logged_in_user = None
 
+def Menu():
+    if logged_in_user and not logged_in_user_admin:
+        print("1. Change Password")
+        print("2. Delete User")
+        print("3. Logout")
+        print("4. Exit")
+    elif logged_in_user_admin and logged_in_user:
+        print("1. Change Password")
+        print("2. Delete Users")
+        print("3. Logout")
+        print("4. Exit")
+    else:
+        print("1. Signup")
+        print("2. Login")
+        print("3. Exit")
+    choice = input("Choose an option: ")
+    return choice
+
+
+def SignUp():
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+
+    successful = addUser(username, password)
+    if successful:
+        print("User registered successfully")
+    else:
+        print("Wrong Input/Username already exists!")
+
+
+def Login():
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+
+    successful = checkUser(username, password)
+    if successful:
+        print("Logged in")
+        if checkAdmin(username, password):
+            global logged_in_user_admin
+            logged_in_user_admin = True
+    else:
+        print("Wrong Input/User not found")
+
+
+def changePassword():
+    new_password = input("Enter new password: ")
+    successful = updatePassword(logged_in_user.Id, new_password)
+    if successful:
+        print("Password updated!")
+    else:
+        print("Wrong Input/Password is the same")
+
+
+def deleteownUser():
+    print("Are you sure that you want to delete your User? (y/n)")
+    x = input()
+    if x == "y":
+        global logged_in_user
+        successful = deleteUser(logged_in_user.Id)
+        if successful:
+            print("User deleted!")
+            logged_in_user = None
+        else:
+            print("Error!")
+    else:
+        print("User not deleted")
+
+
+def admindeleteUser():
+    response = requests.get("http://127.0.0.1:8000/user")
+    res = json.loads(response.text)
+    for i in res:
+        print(str(i["Id"]) + ". " + i["Username"])
+        y = i["Id"]
+    x = input("Which user do you want to delete?\n")
+    if x == "":
+        print("Wrong input!")
+    else:
+        try:
+            x = int(x)
+        except ValueError:
+            x = sys.maxsize
+        if x > int(y):
+            print("Wrong Input!")
+        elif x == admin_id:
+            print("You cant delete an Admin Account!")
+        else:
+            successful = deleteUser(x)
+            if successful:
+                print("User deleted!")
+            else:
+                print("Error!")
+
+
+def logoutUser():
+    global logged_in_user
+    global logged_in_user_admin
+    logged_in_user_admin = False
+    logged_in_user = None
+    print("Logged out successfully")
+
 
 def getUsers():
     try:
@@ -113,94 +214,25 @@ def main():
     global logged_in_user
     global logged_in_user_admin
     while True:
-        if logged_in_user and not logged_in_user_admin:
-            print("1. Change Password")
-            print("2. Delete User")
-            print("3. Logout")
-            print("4. Exit")
-        elif logged_in_user_admin and logged_in_user:
-            print("1. Change Password")
-            print("2. Delete Users")
-            print("3. Logout")
-            print("4. Exit")
-        else:
-            print("1. Signup")
-            print("2. Login")
-            print("3. Exit")
-        choice = input("Choose an option: ")
+        choice = Menu()
 
         if choice == "1" and not logged_in_user:
-            username = input("Enter username: ")
-            password = input("Enter password: ")
-
-            successful = addUser(username, password)
-            if successful:
-                print("User registered successfully")
-            else:
-                print("Wrong Input/Username already exists!")
+            SignUp()
 
         elif choice == "2" and not logged_in_user:
-            username = input("Enter username: ")
-            password = input("Enter password: ")
-
-            successful = checkUser(username, password)
-            if successful:
-                print("Logged in")
-                if checkAdmin(username, password):
-                    logged_in_user_admin = True
-            else:
-                print("Wrong Input/User not found")
+            Login()
 
         elif choice == "1" and logged_in_user:
-            new_password = input("Enter new password: ")
-            successful = updatePassword(logged_in_user.Id, new_password)
-            if successful:
-                print("Password updated!")
-            else:
-                print("Wrong Input/Password is the same")
+            changePassword()
 
         elif choice == "2" and logged_in_user and not logged_in_user_admin:
-            print("Are you sure that you want to delete your User? (y/n)")
-            x = input()
-            if x == "y":
-                successful = deleteUser(logged_in_user.Id)
-                if successful:
-                    print("User deleted!")
-                    logged_in_user = None
-                else:
-                    print("Error!")
-            else:
-                print("User not deleted")
+            deleteownUser()
 
         elif choice == "2" and logged_in_user and logged_in_user_admin:
-            response = requests.get("http://127.0.0.1:8000/user")
-            res = json.loads(response.text)
-            for i in res:
-                print(str(i["Id"]) + ". " + i["Username"])
-                y = i["Id"]
-            x = input("Which user do you want to delete?\n")
-            if x == "":
-                print("Wrong input!")
-            else:
-                try:
-                    x = int(x)
-                except ValueError:
-                    x = sys.maxsize
-                if x > int(y):
-                    print("Wrong Input!")
-                elif x == admin_id:
-                    print("You cant delete an Admin Account!")
-                else:
-                    successful = deleteUser(x)
-                    if successful:
-                        print("User deleted!")
-                    else:
-                        print("Error!")
+            admindeleteUser()
 
         elif choice == "3" and logged_in_user:
-            logged_in_user_admin = False
-            logged_in_user = None
-            print("Logged out successfully")
+            logoutUser()
 
         elif choice == "3" and not logged_in_user or choice == "4" and logged_in_user:
             break
